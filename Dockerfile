@@ -1,22 +1,26 @@
-# Etapa 1: build da aplicação
+# -------- Stage 1: Build the application with Maven --------
 FROM maven:3.9.6-eclipse-temurin-17 AS build
+
+# Define working directory inside the container
 WORKDIR /build
 
-# Copia o conteúdo do projeto para dentro do container
+# Copy all project files (pom.xml, src/) into the container
 COPY . .
 
-# Compila o projeto e gera o jar final (sem testes)
+# Build the Quarkus application, skipping tests
 RUN mvn clean package -DskipTests
 
-# Etapa 2: imagem final para rodar a aplicação
+# -------- Stage 2: Create the runtime image --------
 FROM eclipse-temurin:17-jdk-alpine
+
+# Define working directory for the runtime
 WORKDIR /app
 
-# Copia o jar gerado na etapa anterior
+# Copy the runnable JAR from the build stage
 COPY --from=build /build/target/*-runner.jar app.jar
 
-# Expõe a porta padrão da aplicação
+# Expose the port that Quarkus uses by default
 EXPOSE 8080
 
-# Comando de inicialização
+# Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]
